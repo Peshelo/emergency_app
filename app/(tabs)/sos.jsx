@@ -21,6 +21,13 @@ const EmergencyContacts = () => {
 
   const dummyContacts = [
     {
+      id: '0',
+      name: 'PSTT',
+      type: 'Police Station',
+      phone: '0771159008',
+      place: 'Harare',
+    },
+    {
       id: '1',
       name: 'Parirenyatwa Hospital',
       type: 'Hospital',

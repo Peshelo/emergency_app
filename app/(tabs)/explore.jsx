@@ -173,13 +173,13 @@ const Explore = () => {
       formData.append("title", selectedEmergency.title);
       formData.append("description", description);
       formData.append("city", selectedCity);
-      formData.append("address", "test"); // Replace with actual address if needed
+      formData.append("address", await SecureStore.getItemAsync('user_address')); // Replace with actual address if needed
       formData.append("latitude", location.latitude.toString());
       formData.append("longitude", location.longitude.toString());
       formData.append("merchant", selectedMerchant);
       formData.append("status", "Open");
       formData.append("priority", selectedPriority);
-      formData.append("phoneNumber", "test"); // Replace with actual phone number if needed
+      formData.append("phoneNumber", await SecureStore.getItemAsync('user_phone')); // Replace with actual phone number if needed
 
       if (imageUri) {
         const fileName = imageUri.split("/").pop();

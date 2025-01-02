@@ -11,21 +11,23 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors['light'].tint,
         headerShown: false,
       }}>
+
       <Tabs.Screen
+        name="sos"
+        options={{
+          title: 'Contacts',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'person' : 'call'} color={color} size={24} />
+          ),
+        }}
+      />
+            <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} color={color} size={24} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="sos"
-        options={{
-          title: 'SOS',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'alert-circle' : 'alert-circle-outline'} color={color} size={24} />
+            <Ionicons name={focused ? 'warning' : 'warning-outline'} color={color} size={24} />
+
           ),
         }}
       />
@@ -34,7 +36,7 @@ export default function TabLayout() {
         options={{
           title: 'Explore',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'search' : 'search-outline'} color={color} size={24} />
+            <Ionicons name={focused ? 'compass' : 'compass-outline'} color={color} size={24} />
           ),
         }}
       />

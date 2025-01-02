@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Animated, Vibration, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Animated, Vibration, Alert, Image } from 'react-native';
 import { Stack } from 'expo-router';
 import * as Location from 'expo-location'; // Import Expo's Location module
 import { FontAwesome, MaterialIcons, Entypo, Ionicons, FontAwesome5 } from '@expo/vector-icons';
+import * as SecureStore from 'expo-secure-store';
 
 const EmergencyHelpScreen = () => {
   const [isHolding, setIsHolding] = useState(false);
@@ -41,7 +42,7 @@ const EmergencyHelpScreen = () => {
         clearTimeout(timeout);
       };
     } else {
-      setCountdown(5);
+      setCountdown(4);
       Animated.timing(progress, {
         toValue: 0,
         duration: 0,
@@ -65,6 +66,7 @@ const EmergencyHelpScreen = () => {
       }
 
       location = await Location.getCurrentPositionAsync({});
+      const username = await SecureStore.getItemAsync('user_firstname') + ' ' + await SecureStore.getItemAsync('user_lastname') + ' National Id: ' + await SecureStore.getItemAsync('user_national_id');
       const { latitude, longitude } = location.coords;
 
       // Sending POST request to external server
@@ -75,10 +77,11 @@ const EmergencyHelpScreen = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: 'Emergency SOS',
-          latitude,
-          longitude,
-          recipient: '+263785999058',
+          name: username,
+          latitude: longitude,
+          longitude: latitude,
+          // recipient: '+263785999058',
+          recipient: await SecureStore.getItemAsync('user_phone'),
         }),
       });
 
@@ -96,15 +99,14 @@ const EmergencyHelpScreen = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Stack.Screen
-        options={{
-          title: '',
-          headerShown: true,
-        }}
-      />
+      <Stack.Screen options={{ title: 'SOS',headerShown:true ,
+             headerRight: () => (
+               <Image source={require('../../assets/images/logo.jpg')} style={styles.logoHeader} />
+             )
+            }}/>
       <View style={styles.header}>
         <Text style={styles.title}>Emergency help needed?</Text>
-        <Text style={styles.subtitle}>Hold the button for 5 seconds to send SOS</Text>
+        <Text style={styles.subtitle}>Hold the button for 3 seconds to send SOS</Text>
       </View>
 
       <Animated.View
@@ -184,7 +186,20 @@ const styles = StyleSheet.create({
     // Align items in the center
     alignItems: 'center',
 
+  },  logo: {
+    width: 100,
+    height: 100,
+    objectFit: 'contain',
+    alignSelf: 'center',
+    marginVertical: 16,
   },
+  logoHeader: {
+    width: 40,
+    height: 40,
+    objectFit: 'cover',
+marginRight: 10,
+borderRadius: 50,
+ },
   header: {
     alignItems: 'center',
     marginBottom: 32,
