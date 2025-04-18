@@ -1,15 +1,47 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Animated, Vibration, Alert, Image } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as Location from 'expo-location'; // Import Expo's Location module
 import { FontAwesome, MaterialIcons, Entypo, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
+import pb from "@/lib/connection"; // Assuming you have the PocketBase connection file
+
 
 const EmergencyHelpScreen = () => {
   const [isHolding, setIsHolding] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const progress = useRef(new Animated.Value(0)).current;
   const expansion = useRef(new Animated.Value(0)).current;
+  const [userName, setUserName] = useState('');
+  const router = useRouter();
+  const [errors,setErrors] = useState('');
+
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const firstName = await SecureStore.getItemAsync('user_firstname');
+        const lastName = await SecureStore.getItemAsync('user_lastname');
+        const userPhone = await SecureStore.getItemAsync('user_phone');
+
+        if (!userPhone) {
+          Alert.alert(
+            'Registration Required',
+            'Please register your details before accessing the Emergency Help feature.',
+            [{ text: 'OK', onPress: () => router.push('auth/register') }]
+          );
+        }
+
+        if (firstName && lastName) {
+          setUserName(`${firstName} ${lastName}`);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserData();
+  }, [router]);
 
   useEffect(() => {
     if (isHolding) {
@@ -64,11 +96,39 @@ const EmergencyHelpScreen = () => {
         Alert.alert('Permission Denied', 'Location permission is required to send SOS.');
         return;
       }
-
+  
       location = await Location.getCurrentPositionAsync({});
-      const username = await SecureStore.getItemAsync('user_firstname') + ' ' + await SecureStore.getItemAsync('user_lastname') + ' National Id: ' + await SecureStore.getItemAsync('user_national_id');
+      const firstName = await SecureStore.getItemAsync('user_firstname');
+      const lastName = await SecureStore.getItemAsync('user_lastname');
+      const nationalId = await SecureStore.getItemAsync('user_national_id');
+      const phoneNumber = await SecureStore.getItemAsync('user_phone');
+      const userAddress = await SecureStore.getItemAsync('user_address'); // Replace with actual address logic if needed
+  
+      const username = `${firstName} ${lastName} National ID: ${nationalId}`;
       const { latitude, longitude } = location.coords;
-
+  
+      // Record the SOS case in PocketBase
+      const caseData = {
+        title: 'SOS Emergency',
+        description: `SOS triggered by ${username}`,
+        city: 'Unknown', // Replace with dynamic city retrieval if available
+        address: userAddress || 'Not Provided',
+        latitude: latitude.toString(),
+        longitude: longitude.toString(),
+        merchant: 'oi2mnpx4rc6i655', // Replace with dynamic merchant selection if needed
+        status: 'Open',
+        priority: 'red',
+        phoneNumber,
+      };
+  
+      try {
+        const record = await pb.collection('cases').create(caseData);
+        Alert.alert('SOS Recorded', `Your case has been recorded with ID: ${record.id}`);
+      } catch (error) {
+        console.error('Error recording case:', error);
+        Alert.alert('Error', 'Failed to record case in the database.');
+      }
+  
       // Sending POST request to external server
       const response = await fetch('http://102.37.154.6/send-sos', {
         method: 'POST',
@@ -78,25 +138,25 @@ const EmergencyHelpScreen = () => {
         },
         body: JSON.stringify({
           name: username,
-          latitude: longitude,
-          longitude: latitude,
-          // recipient: '+263785999058',
-          recipient: await SecureStore.getItemAsync('user_phone'),
+          latitude,
+          longitude,
+          recipient: phoneNumber,
         }),
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to send SOS. Server error.');
       }
-
+  
       const responseData = await response.json();
       Alert.alert('SOS Sent', `Message: ${responseData.message}\nLocation: (${latitude}, ${longitude})`);
     } catch (error) {
       console.error('Error sending SOS:', error);
+      setErrors(error);
       Alert.alert('Error', error.message || 'Failed to send SOS signal. Please try again.');
     }
   };
-
+  
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Stack.Screen options={{ title: 'SOS',headerShown:true ,
@@ -105,6 +165,7 @@ const EmergencyHelpScreen = () => {
              )
             }}/>
       <View style={styles.header}>
+      <Text style="color:red;">{errors}</Text>
         <Text style={styles.title}>Emergency help needed?</Text>
         <Text style={styles.subtitle}>Hold the button for 3 seconds to send SOS</Text>
       </View>

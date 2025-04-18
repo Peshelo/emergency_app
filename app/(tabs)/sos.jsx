@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Image,
 } from 'react-native';
 import * as Location from 'expo-location';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import call from 'react-native-phone-call';
+import { Stack } from 'expo-router';
 
 const EmergencyContacts = () => {
   const [contacts, setContacts] = useState([]);
@@ -146,7 +148,12 @@ const EmergencyContacts = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Emergency Contacts</Text>
+      <Stack.Screen options={{ title: 'Emergency Contacts',headerShown:true ,
+             headerRight: () => (
+               <Image source={require('../../assets/images/logo.jpg')} style={styles.logoHeader} />
+             )
+            }}/>
+      {/* <Text style={styles.title}>Emergency Contacts</Text> */}
       <Text style={styles.location}>
         Current Location: {userLocation || 'Fetching location...'}
       </Text>
@@ -228,6 +235,13 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 16,
   },
+  logoHeader: {
+    width: 40,
+    height: 40,
+    objectFit: 'cover',
+marginRight: 10,
+borderRadius: 50,
+ },
   input: {
     height: 40,
     borderColor: '#ccc',

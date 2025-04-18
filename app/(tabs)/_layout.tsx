@@ -12,15 +12,6 @@ export default function TabLayout() {
         headerShown: false,
       }}>
 
-      <Tabs.Screen
-        name="sos"
-        options={{
-          title: 'Contacts',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'person' : 'call'} color={color} size={24} />
-          ),
-        }}
-      />
             <Tabs.Screen
         name="index"
         options={{
@@ -28,6 +19,16 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'warning' : 'warning-outline'} color={color} size={24} />
 
+          ),
+        }}
+      />
+
+<Tabs.Screen
+        name="sos"
+        options={{
+          title: 'Contacts',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'person' : 'call'} color={color} size={24} />
           ),
         }}
       />

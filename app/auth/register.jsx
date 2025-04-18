@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, Image } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { Stack, useRouter } from 'expo-router'; // For navigation
+import pb from "@/lib/connection"; // Assuming you have the PocketBase connection file
 
 const Register = () => {
   const router = useRouter();
@@ -12,7 +13,6 @@ const Register = () => {
   const [nationalID, setNationalID] = useState('');
   const [error, setError] = useState('');
 
-  // Check if user credentials are already saved
   const checkCredentials = async () => {
     try {
       const userFirstName = await SecureStore.getItemAsync('user_firstname');
@@ -29,7 +29,6 @@ const Register = () => {
     checkCredentials(); // Check credentials on mount
   }, []);
 
-  // Validate inputs
   const validateInputs = () => {
     setError('');
     if (!firstName || !lastName || !address || !phoneNumber || !nationalID) {
@@ -43,7 +42,7 @@ const Register = () => {
       return false;
     }
     // National ID format validation (e.g. 08123456D53)
-    const nationalIDRegex = /^\d{8}[A-Z]{1}\d{3}$/; // Example: 08123456D53
+    const nationalIDRegex = /^\d{8}[A-Z]{1}\d{2}$/; // Example: 08123456D53
     if (!nationalIDRegex.test(nationalID)) {
       setError('National ID must be in the format: 08123456D53');
       return false;
@@ -51,11 +50,23 @@ const Register = () => {
     return true;
   };
 
-  // Handle registration
+  // Handle registration with PocketBase
   const handleRegister = async () => {
     if (!validateInputs()) return;
 
     try {
+      const newCitizen = {
+        firstname: firstName,
+        lastname: lastName,
+        address: address,
+        phoneNumber: phoneNumber,
+        nationalId: nationalID,
+      };
+
+      // Save user data to PocketBase collection (citizens)
+      await pb.collection('citizens').create(newCitizen);
+
+      // Store user details locally for secure access (if needed)
       await SecureStore.setItemAsync('user_firstname', firstName);
       await SecureStore.setItemAsync('user_lastname', lastName);
       await SecureStore.setItemAsync('user_address', address);
@@ -63,9 +74,10 @@ const Register = () => {
       await SecureStore.setItemAsync('user_national_id', nationalID);
 
       Alert.alert('Registration Successful', 'Your details have been saved securely.');
-      router.push('auth/login'); // After registration, navigate to login
+      // router.push('auth/login'); // After registration, navigate to login'
+      router.push('/(tabs)/'); // After registration, navigate to login
     } catch (error) {
-      console.error('Error storing user data', error);
+      console.error('Error storing user data in PocketBase', error);
       Alert.alert('Error', 'Something went wrong while saving your details.');
     }
   };
